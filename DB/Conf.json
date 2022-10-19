@@ -1,0 +1,1 @@
+{"_default": {"1": {"comPort": "/dev/rs485", "comBaud": 38400, "comCalib": 60, "comImp": 30}}}
