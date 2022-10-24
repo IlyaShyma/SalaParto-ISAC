@@ -1,3 +1,10 @@
+import csv
+import datetime
+import json
+
+from PySide6.QtCore import QTime, QDateTime
+from PySide6.QtWidgets import QTableWidgetItem
+
 from main import *
 from FDFunctions import *
 
@@ -280,6 +287,33 @@ class SWFunctions():
             boxToSelect = self.ui.tblHall.item(self.ui.tblHall.currentRow(), 0).text()
             self.ui.comAddSelBox.setCurrentText(boxToSelect)
             SWFunctions.checkBoxExisting(self)
+
+            #my shit
+            print("sono qua")
+
+
+
+            with open("reports/myFile.csv", "a", newline="\n") as file:
+                field_names = ["boxName", "sowName", "weightTarg", "readNowFeedKG", "secDone"]
+                writer = csv.DictWriter(file, field_names)
+                # writer.writerow({"": str(datetime.datetime.now())})
+
+                writer.writeheader()
+                for row in self.dbHall:
+                    writer.writerow({"boxName": row.get("boxName"),
+                                     "sowName": row.get("sowName"),
+                                     "weightTarg": "boh",
+                                     "readNowFeedKG": row.get("readNowFeedKG"),
+                                     "secDone": row.get("readNowFeedSec")})
+
+
+                    boxPos = self.dbBox.get(self.query.boxName == row.get("boxName"))
+                    print(boxPos)
+
+
+
+
+
         except:
             pass
 

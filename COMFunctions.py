@@ -1,4 +1,8 @@
-from PySide6.QtCore import QThread
+import csv
+
+import cst as cst
+from PySide6.QtCore import QThread, QTime
+from PySide6.QtWidgets import QTableWidgetItem
 from matplotlib.pyplot import box
 from modbus_tk import modbus_rtu
 
@@ -92,12 +96,7 @@ class COMClass(QThread):
                     if (seconds % 59) == 0: # ogni minuto
                         self.logger.info("LETTURA NORMALE IN CORSO...")
                         COMClass.readNowFeed(self)
-#                       COMClass.startStopFeed(self)
-
-
-
-
-
+                        # COMClass.startStopFeed(self)
             t.sleep(1)
 
     def resetFeed(self):
@@ -234,5 +233,24 @@ class COMClass(QThread):
         self.body = f"Lista ID offline {self.offline}"
         self.logger.info(self.body)
         if len(self.offline) > self.max_offline:
-            self.sendmail()        
+            self.sendmail()
+
+    def my_function(self):
+
+        with open("reports/myFile.csv", "a", newline="\n") as file:
+            field_names = ["boxName", "sowName", "weightTarg", "readNowFeedKG", "secDone"]
+            writer = csv.DictWriter(file, field_names)
+            # writer.writerow({"": str(datetime.datetime.now())})
+
+            writer.writeheader()
+            for row in self.dbHall:
+                boxPos = self.self.dbBox.get(self.self.query.boxName == row.get('boxName'))
+                boxCom = int(boxPos.get('comPos'))
+                weightTarg = self.self.master.execute(boxCom, cst.READ_INPUT_REGISTERS, 7, 1)
+
+                writer.writerow({"boxName": row.get("boxName"),
+                                 "sowName": row.get("sowName"),
+                                 "weightTarg": str(weightTarg),
+                                 "readNowFeedKG": row.get("readNowFeedKG"),
+                                 "secDone": row.get("readNowFeedSec")})
 
