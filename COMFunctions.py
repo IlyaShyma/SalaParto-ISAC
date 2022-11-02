@@ -1,4 +1,5 @@
 import csv
+import os
 
 import cst as cst
 from PySide6.QtCore import QThread, QTime
@@ -93,6 +94,9 @@ class COMClass(QThread):
                     if now.hour() == 0 and now.minute() == 2 and not self.reset:
                         self.logger.info("RESET GIORNATA IN CORSO...")
                         COMClass.resetFeed(self)
+
+                        self.daily_report("reports/myFile.csv")
+
                     if (seconds % 59) == 0: # ogni minuto
                         self.logger.info("LETTURA NORMALE IN CORSO...")
                         COMClass.readNowFeed(self)
@@ -235,22 +239,30 @@ class COMClass(QThread):
         if len(self.offline) > self.max_offline:
             self.sendmail()
 
-    def my_function(self):
-
-        with open("reports/myFile.csv", "a", newline="\n") as file:
-            field_names = ["boxName", "sowName", "weightTarg", "readNowFeedKG", "secDone"]
+    def daily_report(self, file_relative_path):
+        # file_name = "reports/myFile.csv"
+        with open(file_relative_path, "a", newline="\n") as file:
+            field_names = ["boxName", "sowName", "weightTarg", "readNowFeedKG", "secDone", "date"]
             writer = csv.DictWriter(file, field_names)
             # writer.writerow({"": str(datetime.datetime.now())})
+            if (os.stat(file_relative_path).st_size == 0):
+                writer.writeheader()
 
-            writer.writeheader()
-            for row in self.dbHall:
+            data = QDate.currentDate().toString("dd/MM/yyyy")
+
+            for row in self.self.dbHall:
                 boxPos = self.self.dbBox.get(self.self.query.boxName == row.get('boxName'))
                 boxCom = int(boxPos.get('comPos'))
-                weightTarg = self.self.master.execute(boxCom, cst.READ_INPUT_REGISTERS, 7, 1)
 
-                writer.writerow({"boxName": row.get("boxName"),
-                                 "sowName": row.get("sowName"),
-                                 "weightTarg": str(weightTarg),
-                                 "readNowFeedKG": row.get("readNowFeedKG"),
-                                 "secDone": row.get("readNowFeedSec")})
+                try:
+                    weightTarg = self.self.master.execute(boxCom, cst.READ_INPUT_REGISTERS, 7, 1)
+                except:
+                    weightTarg = ("err_read",)
+                finally:
+                    writer.writerow({"boxName": row.get("boxName"),
+                                     "sowName": row.get("sowName"),
+                                     "weightTarg": str(weightTarg[0]),
+                                     "readNowFeedKG": row.get("readNowFeedKG"),
+                                     "secDone": row.get("readNowFeedSec"),
+                                     "date": data})
 
