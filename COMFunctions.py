@@ -152,6 +152,7 @@ class COMClass(QThread):
                     # self.logger.info(f"Old values:{self.self.dbHall.get(self.self.query.boxName == item.get('boxName'))}")
 
                     self.logger.info(f"id:{boxCom}, name:{item.get('boxName')}, tHi:{tHi}, tLo:{tLo}, secToRun:{secToRun}, secTrig:{secTrig}, secDone:{secDone}, numReq:{numReq}, waterPerc:{waterPerc}, weightTarg:{weightTarg}, readNowFeedKG:{readNowFeedKG}, calVal:{calVal}, hall:{hall}, cage:{cage}, boot:{boot}, sw:{sw}")
+
                     if (QDateTime.currentSecsSinceEpoch() - ((tHi << 16) | tLo)) > (5 * 60) or self.reset:  #differenza di orario > 5 minuti
                         sec_done = self.self.dbHall.get(self.self.query.boxName == item.get('boxName'))['readNowFeedSec']
                         weight_done = self.self.dbHall.get(self.self.query.boxName == item.get('boxName'))['readNowFeedKG']
@@ -242,10 +243,10 @@ class COMClass(QThread):
     def daily_report(self, file_relative_path):
         # file_name = "reports/myFile.csv"
         with open(file_relative_path, "a", newline="\n") as file:
-            field_names = ["boxName", "sowName", "weightTarg", "readNowFeedKG", "secDone", "date"]
+            field_names = ["id", "boxName", "sowName", "weightTarg", "readNowFeedKG", "secDone", "date"]
             writer = csv.DictWriter(file, field_names)
             # writer.writerow({"": str(datetime.datetime.now())})
-            if (os.stat(file_relative_path).st_size == 0):
+            if os.stat(file_relative_path).st_size == 0:
                 writer.writeheader()
 
             data = QDate.currentDate().toString("dd/MM/yyyy")
@@ -259,7 +260,8 @@ class COMClass(QThread):
                 except:
                     weightTarg = ("err_read",)
                 finally:
-                    writer.writerow({"boxName": row.get("boxName"),
+                    writer.writerow({"id": str(boxCom),
+                                     "boxName": row.get("boxName"),
                                      "sowName": row.get("sowName"),
                                      "weightTarg": str(weightTarg[0]),
                                      "readNowFeedKG": row.get("readNowFeedKG"),
